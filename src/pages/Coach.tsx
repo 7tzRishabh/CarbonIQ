@@ -24,10 +24,19 @@ export default function Coach() {
           userData: { ecoPoints: ecoPoints }
         }),
       });
-      const data = await res.json();
+      
+      const contentType = res.headers.get("content-type");
+      let data = { text: "", error: "Failed to fetch response" };
+      
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        console.error("Non-JSON response:", text);
+      }
       
       if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch response");
+        throw new Error(data.error || "The service is temporarily unavailable. Please try again later.");
       }
       
       setResponse(data.text);

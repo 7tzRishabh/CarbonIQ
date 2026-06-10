@@ -32,7 +32,7 @@ async function startServer() {
       Format your response in beautiful markdown, using bullet points and clear headers. Do not output raw JSON.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: prompt,
         config: {
           systemInstruction: context,
@@ -45,7 +45,7 @@ async function startServer() {
       if (error?.status === "RESOURCE_EXHAUSTED" || error?.status === 429 || error?.message?.includes("429") || error?.message?.includes("quota")) {
         res.status(429).json({ error: "The AI Coach has temporarily reached its rate limits. Please try again in a few moments." });
       } else if (error?.status === "UNAVAILABLE" || error?.status === 503 || error?.message?.includes("503") || error?.message?.includes("high demand") || error?.message?.includes("overloaded")) {
-        res.status(503).json({ error: "The AI Coach is currently experiencing high demand. Please try again later." });
+        res.status(500).json({ error: "The AI Coach is currently experiencing high demand. Please try again later." });
       } else {
         res.status(500).json({ error: error.message || "An internal error occurred." });
       }
