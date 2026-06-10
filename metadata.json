@@ -1,0 +1,6 @@
+{
+  "name": "CarbonIQ",
+  "description": "CarbonIQ is an AI-powered carbon footprint tracking platform that helps users measure, understand, and reduce their environmental impact through personalized insights and sustainability recommendations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

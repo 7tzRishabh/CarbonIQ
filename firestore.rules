@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function existing() { return resource.data; }
+    function incoming() { return request.resource.data; }
+
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    function isValidUser(data) {
+      return data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'carbonScore', 'ecoPoints', 'createdAt', 'updatedAt'])
+        && data.uid == request.auth.uid
+        && data.uid is string && data.uid.size() <= 128
+        && data.email is string && data.email.size() <= 128
+        && data.createdAt is number
+        && data.updatedAt is number
+        && ( !('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100) )
+        && ( !('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 2048) )
+        && ( !('carbonScore' in data) || data.carbonScore is number )
+        && ( !('ecoPoints' in data) || data.ecoPoints is number );
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt;
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasOnly(['userId', 'category', 'value', 'carbonEmittedKg', 'date', 'notes'])
+        && data.userId == request.auth.uid
+        && data.category is string && data.category in ['transportation', 'electricity', 'food', 'waste', 'water']
+        && data.value is number
+        && data.carbonEmittedKg is number
+        && data.date is number
+        && ( !('notes' in data) || (data.notes is string && data.notes.size() <= 500) );
+    }
+
+    match /logs/{logId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidLog(incoming());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidLog(incoming())
+        && incoming().userId == resource.data.userId;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

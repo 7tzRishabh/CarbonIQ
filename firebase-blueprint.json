@@ -1,0 +1,45 @@
+{
+  "firestoreDatabaseId": "ai-studio-8bb179b1-35ab-4421-8323-c56950b39939",
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user's profile and settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "carbonScore": { "type": "number", "description": "Current overall carbon footprint score" },
+        "ecoPoints": { "type": "number", "description": "Gamification points" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "FootprintLog": {
+      "title": "FootprintLog",
+      "description": "A log of an activity that contributes to carbon footprint.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "category": { "type": "string", "enum": ["transportation", "electricity", "food", "waste", "water"] },
+        "value": { "type": "number", "description": "Raw value of consumption or emission" },
+        "carbonEmittedKg": { "type": "number", "description": "Calculated carbon emitted in kg" },
+        "date": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "category", "value", "carbonEmittedKg", "date"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "logs/{logId}": {
+      "schema": { "$ref": "#/entities/FootprintLog" },
+      "description": "Individual footprint logs."
+    }
+  }
+}
