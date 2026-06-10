@@ -10,39 +10,44 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+      <nav aria-label="Main Navigation" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
+          <div aria-hidden="true" className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
             <Leaf className="w-6 h-6 text-white" />
           </div>
-          <span className="font-bold text-2xl text-gray-900 tracking-tight">Carbon<span className="text-blue-600">IQ</span></span>
+          <span className="font-black text-2xl text-gray-900 tracking-tight">Carbon<span className="text-blue-700">IQ</span></span>
         </div>
         <div>
           {user ? (
-            <button onClick={() => navigate('/app/dashboard')} className="font-medium text-gray-600 hover:text-gray-900 px-4 py-2">Go to Dashboard</button>
+            <button 
+              onClick={() => navigate('/app/dashboard')} 
+              className="font-bold text-gray-700 hover:text-gray-900 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded-lg"
+            >
+              Go to Dashboard
+            </button>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/login" className="font-medium text-gray-600 hover:text-gray-900 px-4 py-2">Log In</Link>
-              <Link to="/login" className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition-colors tracking-wide">Get Started</Link>
+              <Link to="/login" className="font-bold text-gray-700 hover:text-gray-900 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 rounded-lg">Log In</Link>
+              <Link to="/login" className="bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-800 transition-colors tracking-wide shadow-lg shadow-blue-200">Get Started</Link>
             </div>
           )}
         </div>
       </nav>
 
-      <main>
+      <main id="main-content" className="outline-none" tabIndex={-1}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center lg:pt-32">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto max-w-4xl font-sans text-5xl font-extrabold tracking-tight text-gray-900 sm:text-7xl"
+            className="mx-auto max-w-4xl font-sans text-5xl font-black tracking-tight text-gray-900 sm:text-7xl"
           >
-            Understand and reduce your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-blue-600">carbon footprint</span> with AI.
+            Understand and reduce your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-700">carbon footprint</span> with AI.
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mx-auto mt-6 max-w-2xl text-lg text-gray-600 leading-relaxed"
+            className="mx-auto mt-8 max-w-2xl text-lg text-gray-700 font-medium leading-relaxed"
           >
             CarbonIQ is an AI-powered carbon footprint tracking platform that helps users measure, understand, and reduce their environmental impact through personalized insights and sustainability recommendations.
           </motion.p>
@@ -50,53 +55,53 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mt-10 flex justify-center gap-4"
+            className="mt-12 flex justify-center gap-4"
           >
-            <Link to="/login" className="bg-gray-900 text-white px-8 py-3.5 rounded-xl font-medium hover:bg-gray-800 transition-all flex items-center gap-2 shadow-xl shadow-gray-200">
-              Start Tracking Free <ArrowRight className="w-5 h-5" />
+            <Link to="/login" className="bg-gray-900 text-white px-8 py-4 rounded-xl font-bold hover:bg-black transition-all flex items-center gap-2 shadow-2xl shadow-gray-300">
+              Start Tracking Free <ArrowRight aria-hidden="true" className="w-5 h-5" />
             </Link>
           </motion.div>
         </div>
 
-        <div className="bg-gray-50 py-24 sm:py-32">
+        <section aria-labelledby="features-title" className="bg-gray-50 py-24 sm:py-32 border-t border-gray-100">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl lg:text-center">
-              <h2 className="text-base font-semibold leading-7 text-blue-600">Faster insights</h2>
-              <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Everything you need to go green</p>
+              <h2 id="features-title" className="text-sm font-black uppercase tracking-widest text-blue-700 mb-2">Platform Features</h2>
+              <p className="mt-2 text-4xl font-black tracking-tight text-gray-900 sm:text-5xl">Everything you need to go green</p>
             </div>
             <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              <dl className="grid max-w-xl grid-cols-1 gap-x-12 gap-y-16 lg:max-w-none lg:grid-cols-3">
                 <div className="flex flex-col">
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                    <BarChart3 className="h-5 w-5 flex-none text-blue-600" aria-hidden="true" />
+                  <dt className="flex items-center gap-x-3 text-lg font-bold leading-7 text-gray-900">
+                    <BarChart3 className="h-6 w-6 flex-none text-blue-700" aria-hidden="true" />
                     Real-time Tracking
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-700 font-medium">
                     <p className="flex-auto">Log your transportation, meals, and energy use. Watch your carbon score update instantly with interactive charts.</p>
                   </dd>
                 </div>
                 <div className="flex flex-col">
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                    <ShieldCheck className="h-5 w-5 flex-none text-emerald-600" aria-hidden="true" />
+                  <dt className="flex items-center gap-x-3 text-lg font-bold leading-7 text-gray-900">
+                    <ShieldCheck className="h-6 w-6 flex-none text-emerald-700" aria-hidden="true" />
                     AI-Powered Insights
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                    <p className="flex-auto">Get personalized recommendations and automated 30-day sustainability roadmaps generated by Gemini.</p>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-700 font-medium">
+                    <p className="flex-auto">Get personalized recommendations and automated 30-day sustainability roadmaps generated by Gemini AI.</p>
                   </dd>
                 </div>
                 <div className="flex flex-col">
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                    <Globe className="h-5 w-5 flex-none text-blue-600" aria-hidden="true" />
+                  <dt className="flex items-center gap-x-3 text-lg font-bold leading-7 text-gray-900">
+                    <Globe className="h-6 w-6 flex-none text-blue-700" aria-hidden="true" />
                     Global Impact
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                    <p className="flex-auto">Compare your footprint against global averages, earn eco-badges, and compete on the leaderboard.</p>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-700 font-medium">
+                    <p className="flex-auto">Compare your footprint against global averages, earn eco-badges, and compete on the global leaderboard.</p>
                   </dd>
                 </div>
               </dl>
             </div>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { 
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
-const navigation = [
+const NAVIGATION_ITEMS = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
   { name: "Calculator", href: "/app/calculator", icon: Calculator },
   { name: "AI Coach", href: "/app/coach", icon: Leaf },
@@ -22,107 +22,164 @@ const navigation = [
   { name: "Leaderboard", href: "/app/leaderboard", icon: Trophy },
 ];
 
+const NavLink = memo(({ item, isActive, onClick, isMobile }: any) => {
+  if (isMobile) {
+    return (
+      <Link
+        to={item.href}
+        onClick={onClick}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
+          isActive
+            ? "bg-green-50 text-green-700"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        )}
+      >
+        <item.icon className={cn("w-5 h-5", isActive ? "text-green-600" : "text-gray-400")} />
+        {item.name}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      to={item.href}
+      className={cn(
+        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+        isActive
+          ? "bg-green-50 text-emerald-700 font-semibold"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 overflow-hidden relative group"
+      )}
+    >
+      <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-emerald-600" : "text-gray-400")} />
+      {item.name}
+    </Link>
+  );
+});
+
+NavLink.displayName = "NavLink";
+
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
+
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen(prev => !prev);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+      {/* Skip to Content Link */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-lg focus:shadow-lg outline-none ring-2 ring-emerald-500 ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile nav */}
-      <div className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4 sticky top-0 z-10 shadow-sm">
+      <header className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
+          <div aria-hidden="true" className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
             <Leaf className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-xl text-gray-900 tracking-tight">CarbonIQ</span>
         </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2">
+        <button 
+          onClick={toggleMobileMenu} 
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
+          className="p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
           <Menu className="w-6 h-6 text-gray-600" />
         </button>
-      </div>
+      </header>
 
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-2 space-y-1">
-           {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-green-50 text-green-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                >
-                  <item.icon className={cn("w-5 h-5", isActive ? "text-green-600" : "text-gray-400")} />
-                  {item.name}
-                </Link>
-              );
-            })}
-        </div>
+        <nav id="mobile-navigation" className="md:hidden bg-white border-b border-gray-200 px-4 py-2 space-y-1" aria-label="Mobile Navigation">
+           {NAVIGATION_ITEMS.map((item) => (
+             <NavLink 
+               key={item.name}
+               item={item} 
+               isActive={location.pathname === item.href} 
+               onClick={closeMobileMenu}
+               isMobile
+             />
+           ))}
+        </nav>
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0">
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0" aria-label="Sidebar Navigation">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+          <div aria-hidden="true" className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
             <Leaf className="w-6 h-6 text-white" />
           </div>
           <span className="font-bold text-2xl text-gray-900 tracking-tight">Carbon<span className="text-blue-600">IQ</span></span>
         </div>
 
-        <div className="px-4 pb-6">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
-          <nav className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-green-50 text-emerald-700 font-semibold"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 overflow-hidden relative group"
-                  )}
-                >
-                  <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-emerald-600" : "text-gray-400")} />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <nav className="px-4 pb-6 flex-1">
+          <p className="px-4 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menu</p>
+          <div className="space-y-1">
+            {NAVIGATION_ITEMS.map((item) => (
+              <NavLink 
+                key={item.name}
+                item={item} 
+                isActive={location.pathname === item.href} 
+              />
+            ))}
+          </div>
+        </nav>
 
-        <div className="mt-auto p-4 relative">
-            <div className="bg-emerald-50 rounded-2xl p-4 mb-4 relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-200 rounded-full blur-2xl opacity-50"></div>
-                <p className="text-xs font-semibold text-emerald-800 mb-1">Go Premium</p>
-                <p className="text-[10px] text-emerald-600 mb-3">Unlock deeper AI insights & advanced tracking.</p>
-                <button className="w-full bg-emerald-600 text-white rounded-lg text-xs font-medium py-2 hover:bg-emerald-700 transition-colors">Upgrade</button>
-            </div>
+        <div className="p-4 relative">
+            <section aria-label="Premium Upgrade" className="bg-emerald-50 rounded-2xl p-4 mb-4 relative overflow-hidden">
+                <div aria-hidden="true" className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-200 rounded-full blur-2xl opacity-50"></div>
+                <p className="text-xs font-bold text-emerald-900 mb-1">Go Premium</p>
+                <p className="text-[10px] text-emerald-700 font-medium mb-3">Unlock deeper AI insights & advanced tracking.</p>
+                <button className="w-full bg-emerald-600 text-white rounded-lg text-xs font-bold py-2 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors">Upgrade</button>
+            </section>
 
-            <nav className="space-y-1">
-            <Link to="/app/profile" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-              <User className="w-5 h-5 text-gray-400" />Profile
+            <nav className="space-y-1" aria-label="User Settings">
+            <Link 
+              to="/app/profile" 
+              className={cn(
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                location.pathname === "/app/profile" ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              )}
+            >
+              <User aria-hidden="true" className="w-5 h-5 text-gray-400" />Profile
             </Link>
-            <Link to="/app/settings" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-              <Settings className="w-5 h-5 text-gray-400" />Settings
+            <Link 
+              to="/app/settings" 
+              className={cn(
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                location.pathname === "/app/settings" ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              )}
+            >
+              <Settings aria-hidden="true" className="w-5 h-5 text-gray-400" />Settings
             </Link>
-            <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
-              <LogOut className="w-5 h-5 text-red-500" />Sign Out
+            <button 
+              onClick={handleLogout} 
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors text-left"
+            >
+              <LogOut aria-hidden="true" className="w-5 h-5 text-red-600" />Sign Out
             </button>
           </nav>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 w-full min-w-0">
+      <main id="main-content" className="flex-1 w-full min-w-0 outline-none" tabIndex={-1}>
         <div className="h-full">
             {children}
         </div>

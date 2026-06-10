@@ -1,80 +1,76 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth, db } from "../lib/firebase";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../lib/firebase";
+import { authService } from "../services/authService";
+import { AuthState } from "../types";
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
+interface AuthContextType extends AuthState {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  ecoPoints: number;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
   loading: true,
+  ecoPoints: 0,
   signInWithGoogle: async () => {},
   logout: async () => {},
-  ecoPoints: 0,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [ecoPoints, setEcoPoints] = useState(0);
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    profile: null,
+    loading: true,
+    ecoPoints: 0,
+  });
 
-  useEffect(() => {
-    let unsubscribeDoc: (() => void) | undefined;
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        // sync user in firestore
-        const userRef = doc(db, "users", currentUser.uid);
-        const snapshot = await getDoc(userRef);
-        if (!snapshot.exists()) {
-          const newDoc: any = {
-            uid: currentUser.uid,
-            email: currentUser.email || "",
-            carbonScore: 0,
-            ecoPoints: 0,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          };
-          if (currentUser.displayName) newDoc.displayName = currentUser.displayName;
-          if (currentUser.photoURL) newDoc.photoURL = currentUser.photoURL;
-
-          await setDoc(userRef, newDoc);
-        }
-        
-        unsubscribeDoc = onSnapshot(userRef, (docSnap) => {
-           if (docSnap.exists()) {
-              setEcoPoints(docSnap.data().ecoPoints || 0);
-           }
-        });
-      } else {
-        setEcoPoints(0);
-        if (unsubscribeDoc) unsubscribeDoc();
-      }
-      setLoading(false);
-    });
-    return () => {
-        unsubscribeAuth();
-        if (unsubscribeDoc) unsubscribeDoc();
-    };
+  const updateProfile = useCallback((profile: any) => {
+    setState(prev => ({ 
+      ...prev, 
+      profile, 
+      ecoPoints: profile.ecoPoints || 0 
+    }));
   }, []);
 
+  useEffect(() => {
+    let unsubscribeProfile: (() => void) | undefined;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const profile = await authService.syncUserProfile(currentUser);
+          setState(prev => ({ ...prev, user: currentUser, profile, ecoPoints: profile.ecoPoints }));
+          
+          unsubscribeProfile = authService.subscribeToProfile(currentUser.uid, updateProfile);
+        } catch (error) {
+          console.error("Auth profile sync failed:", error);
+          setState(prev => ({ ...prev, user: currentUser, loading: false }));
+        }
+      } else {
+        setState({ user: null, profile: null, loading: false, ecoPoints: 0 });
+        if (unsubscribeProfile) unsubscribeProfile();
+      }
+      setState(prev => ({ ...prev, loading: false }));
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
+  }, [updateProfile]);
+
   const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    await authService.signInWithGoogle();
   };
 
   const logout = async () => {
-    await signOut(auth);
+    await authService.logout();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout, ecoPoints }}>
+    <AuthContext.Provider value={{ ...state, signInWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );
