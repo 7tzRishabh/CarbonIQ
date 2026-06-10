@@ -23,10 +23,6 @@ export function useReports() {
     fetchLogs();
   }, [user]);
 
-  const sortedLogs = useMemo(() => {
-    return [...logs].sort((a, b) => b.date - a.date);
-  }, [logs]);
-
   const exportToCSV = useCallback(() => {
     if (logs.length === 0) return;
 
@@ -53,5 +49,5 @@ export function useReports() {
     document.body.removeChild(a);
   }, [logs]);
 
-  return { logs: sortedLogs, loading, exportToCSV };
+  return { logs, loading, exportToCSV };
 }

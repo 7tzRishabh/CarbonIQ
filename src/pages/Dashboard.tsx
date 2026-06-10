@@ -1,49 +1,39 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { TrendingDown, Wind, Zap, Car, Utensils, Droplets, Trophy } from "lucide-react";
+import { TrendingDown, Wind, Trophy, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
 import { useDashboard } from "../hooks/useDashboard";
 import { CARBON_CATEGORIES } from "../constants";
+import CategoryBar from "../components/dashboard/CategoryBar";
+import ChallengeCard from "../components/dashboard/ChallengeCard";
+import InsightsSection from "../components/dashboard/InsightsSection";
+import { formatCarbon } from "../utils/formatters";
 
-const CategoryBar = React.memo(({ icon: Icon, color, name, value, target }: any) => {
-    const isOver = value > target;
-    const percentage = Math.min((value/target)*100, 100);
-    return (
-        <div role="group" aria-labelledby={`cat-label-${name}`}>
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                    <div aria-hidden="true" className={`p-1.5 rounded-lg text-white ${color}`}><Icon className="w-4 h-4" /></div>
-                    <span id={`cat-label-${name}`} className="text-sm font-bold text-gray-700">{name}</span>
-                </div>
-                <div className="text-sm font-bold text-gray-900" aria-label={`${value} of ${target} kilograms`}>
-                    {value} <span className="text-gray-500 font-medium">/ {target} kg</span>
-                </div>
-            </div>
-            <div 
-                className="w-full bg-gray-100 rounded-full h-3 overflow-hidden"
-                role="progressbar"
-                aria-valuenow={value}
-                aria-valuemin={0}
-                aria-valuemax={target}
-                aria-label={`${name} carbon emissions progress`}
-            >
-                <div 
-                    className={`h-full rounded-full transition-all duration-1000 ${isOver ? 'bg-red-600' : color}`} 
-                    style={{ width: `${percentage}%` }}
-                ></div>
-            </div>
-        </div>
-    )
-});
-
-CategoryBar.displayName = 'CategoryBar';
+const ChartSection = lazy(() => import("../components/ChartSection"));
 
 export default function Dashboard() {
-  const { user, ecoPoints } = useAuth();
-  const { totalEmissions, categoryImpact, graphData } = useDashboard();
+  const { user, ecoPoints, profile } = useAuth();
+  const { totalEmissions, categoryImpact, graphData, insights, loading } = useDashboard();
+
+  const monthlyGoal = profile?.monthlyGoal || 500;
+  const goalProgress = Math.min((totalEmissions / monthlyGoal) * 100, 100);
+
+  if (loading) {
+// ... existing loader ...
+    return (
+      <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-pulse">
+        <div className="h-12 w-64 bg-gray-200 rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-40 bg-gray-200 rounded-3xl" />
+          <div className="h-40 bg-gray-200 rounded-3xl md:col-span-2" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 bg-gray-200 rounded-3xl" />
+          <div className="h-64 bg-gray-200 rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -69,10 +59,27 @@ export default function Dashboard() {
             </div>
             <div className="relative z-10 mt-auto">
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-gray-900">{totalEmissions}</span>
+                <span className="text-4xl font-black text-gray-900">{formatCarbon(totalEmissions)}</span>
                 <span className="text-gray-600 mb-1 font-bold">kg CO₂e</span>
               </div>
-              <div className="flex items-center gap-1 mt-2 text-sm text-emerald-700 font-bold">
+              
+              <div className="mt-4 space-y-1.5">
+                <div className="flex justify-between text-xs font-bold">
+                  <span className="text-gray-500 uppercase tracking-wider">Monthly Goal</span>
+                  <span className={goalProgress > 90 ? 'text-red-500' : 'text-emerald-600'}>
+                    {Math.round(goalProgress)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden" role="progressbar" aria-valuenow={goalProgress} aria-valuemin={0} aria-valuemax={100}>
+                  <div 
+                    className={`h-full transition-all duration-1000 ${goalProgress > 90 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                    style={{ width: `${goalProgress}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium italic">Target: {monthlyGoal}kg / month</p>
+              </div>
+
+              <div className="flex items-center gap-1 mt-4 text-sm text-emerald-700 font-bold">
                 <TrendingDown aria-hidden="true" className="w-4 h-4" /> 12% from last month
               </div>
             </div>
@@ -85,19 +92,15 @@ export default function Dashboard() {
                   <h3 id="trend-title" className="font-bold text-gray-700">Emissions Trend (7 Days)</h3>
               </div>
               <div className="h-48 w-full" role="img" aria-label="Line chart showing carbon emissions trend over the last 7 days. Emissions have been steadily decreasing.">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={graphData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#4B5563', fontSize: 12, fontWeight: 600}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#4B5563', fontSize: 12, fontWeight: 600}} />
-                    <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontWeight: 600}} />
-                    <Line type="monotone" dataKey="emissions" stroke="#059669" strokeWidth={4} dot={{r: 5, fill: '#059669', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 8}} />
-                  </LineChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<div className="h-full w-full flex items-center justify-center bg-gray-50 rounded-xl"><Loader2 className="w-6 h-6 animate-spin text-emerald-500" /></div>}>
+                  <ChartSection data={graphData} />
+                </Suspense>
               </div>
           </motion.div>
         </section>
       </div>
+
+      <InsightsSection insights={insights} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <section aria-labelledby="category-title" className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -122,40 +125,8 @@ export default function Dashboard() {
                 <h3 id="challenges-title" className="font-extrabold text-xl tracking-tight">Active Challenges</h3>
             </div>
             <div className="space-y-5 mt-6">
-                <div role="group" aria-label="Meatless Week challenge" className="bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/20">
-                    <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-lg">Meatless Week</span>
-                        <span className="text-xs font-black bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest">+50 Pts</span>
-                    </div>
-                    <div 
-                      className="w-full bg-black/20 rounded-full h-2.5 mb-2"
-                      role="progressbar"
-                      aria-valuenow={3}
-                      aria-valuemin={0}
-                      aria-valuemax={7}
-                      aria-label="Meatless Week progress"
-                    >
-                        <div className="bg-white h-full rounded-full shadow-sm" style={{ width: '40.8%' }}></div>
-                    </div>
-                    <p className="text-xs font-bold text-emerald-50 text-right">3 / 7 Days Completed</p>
-                </div>
-                 <div role="group" aria-label="Public Transit Commuter challenge" className="bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/20">
-                    <div className="flex justify-between items-center mb-3">
-                        <span className="font-bold text-lg">Public Transit Commuter</span>
-                        <span className="text-xs font-black bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest">+100 Pts</span>
-                    </div>
-                    <div 
-                      className="w-full bg-black/20 rounded-full h-2.5 mb-2"
-                      role="progressbar"
-                      aria-valuenow={4}
-                      aria-valuemin={0}
-                      aria-valuemax={5}
-                      aria-label="Public Transit Commuter progress"
-                    >
-                        <div className="bg-white h-full rounded-full shadow-sm" style={{ width: '80%' }}></div>
-                    </div>
-                    <p className="text-xs font-bold text-emerald-50 text-right">4 / 5 Trips Completed</p>
-                </div>
+                <ChallengeCard title="Meatless Week" points={50} progress={3} total={7} label="Days Completed" />
+                <ChallengeCard title="Public Transit Commuter" points={100} progress={4} total={5} label="Trips Completed" />
             </div>
           </section>
       </div>

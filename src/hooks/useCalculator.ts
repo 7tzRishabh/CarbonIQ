@@ -1,10 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { carbonService } from "../services/carbonService";
 import { CARBON_CATEGORIES } from "../constants";
 
 export function useCalculator() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -13,7 +15,10 @@ export function useCalculator() {
     notes: ""
   });
 
-  const selectedCategory = CARBON_CATEGORIES.find(c => c.id === formData.category);
+  const selectedCategory = useMemo(() => 
+    CARBON_CATEGORIES.find(c => c.id === formData.category),
+    [formData.category]
+  );
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +38,12 @@ export function useCalculator() {
       });
 
       setSuccess(true);
+      showToast("Activity logged! +10 Eco Points", "success");
       setFormData(prev => ({ ...prev, value: "", notes: "" }));
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error("Calculator submission failed:", err);
+      showToast("Failed to log activity. Please try again.", "error");
     } finally {
       setLoading(false);
     }

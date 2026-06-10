@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { FileDown, FileText, Loader2, BarChart2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useReports } from "../hooks/useReports";
@@ -6,7 +6,10 @@ import { useReports } from "../hooks/useReports";
 export default function Reports() {
   const { logs, loading, exportToCSV } = useReports();
 
-  const totalEmissions = logs.reduce((sum, log) => sum + log.carbonEmittedKg, 0);
+  const totalEmissions = useMemo(() => 
+    logs.reduce((sum, log) => sum + log.carbonEmittedKg, 0),
+    [logs]
+  );
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">

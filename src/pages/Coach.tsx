@@ -1,8 +1,9 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Leaf, Send, Sparkles, Loader2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { useCoach } from "../hooks/useCoach";
+
+const ReactMarkdown = lazy(() => import("react-markdown"));
 
 export default function Coach() {
   const { ecoPoints } = useAuth();
@@ -37,7 +38,9 @@ export default function Coach() {
 
         {response && !loading && (
           <div className="prose prose-emerald max-w-none pb-4">
-            <ReactMarkdown>{response}</ReactMarkdown>
+            <Suspense fallback={<div className="h-20 w-full animate-pulse bg-gray-50 rounded-xl" />}>
+              <ReactMarkdown>{response}</ReactMarkdown>
+            </Suspense>
           </div>
         )}
       </div>

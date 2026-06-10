@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { carbonService } from "../services/carbonService";
-import { CarbonLog } from "../types";
+import { CarbonLog, CarbonInsight } from "../types";
 
 export function useDashboard() {
   const { user } = useAuth();
@@ -12,7 +12,7 @@ export function useDashboard() {
     async function fetchLogs() {
       if (!user) return;
       try {
-        const logsData = await carbonService.getUserLogs(user.uid);
+        const logsData = await carbonService.getUserLogs(user.uid, 30);
         setLogs(logsData);
       } catch (e) {
         console.error("Dashboard fetch logs failed:", e);
@@ -24,7 +24,42 @@ export function useDashboard() {
   }, [user]);
 
   const totalEmissions = useMemo(() => {
-    return logs.reduce((sum, log) => sum + log.carbonEmittedKg, 0).toFixed(1);
+    return logs.reduce((sum, log) => sum + log.carbonEmittedKg, 0);
+  }, [logs]);
+
+  const insights = useMemo<CarbonInsight[]>(() => {
+    if (logs.length === 0) return [];
+    
+    const results: CarbonInsight[] = [];
+    
+    // Check for high transport emissions
+    const transport = logs.filter(l => l.category === 'transportation').reduce((s, l) => s + l.carbonEmittedKg, 0);
+    if (transport > 50) {
+      results.push({
+        id: 'transport_high',
+        type: 'warning',
+        text: 'Your transport emissions are 20% higher than average this week.',
+        action: 'Try carpooling'
+      });
+    }
+
+    // Achievement: Consistently low food emissions
+    const food = logs.filter(l => l.category === 'food').reduce((s, l) => s + l.carbonEmittedKg, 0);
+    if (food < 10 && logs.length > 5) {
+      results.push({
+        id: 'food_win',
+        type: 'achievement',
+        text: 'Eco-chef! Your food choice emissions have stayed minimal all week.',
+      });
+    }
+
+    results.push({
+      id: 'general_tip',
+      type: 'tip',
+      text: 'Switching to LED bulbs can save up to 75kg of CO2 per year.',
+    });
+
+    return results;
   }, [logs]);
 
   const categoryImpact = useMemo(() => {
@@ -73,6 +108,7 @@ export function useDashboard() {
     loading,
     totalEmissions,
     categoryImpact,
-    graphData
+    graphData,
+    insights
   };
 }

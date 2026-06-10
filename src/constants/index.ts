@@ -43,3 +43,15 @@ export const CARBON_CATEGORIES: CarbonCategory[] = [
 ];
 
 export const POINTS_PER_LOG = 10;
+
+export const CACHE_KEYS = {
+  LOGS: 'logs_',
+  LEADERBOARD: 'leaderboard_',
+} as const;
+
+export const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export const DASHBOARD_STATS = {
+  TREND_DAYS: 7,
+  INSIGHT_DAYS: 30,
+} as const;

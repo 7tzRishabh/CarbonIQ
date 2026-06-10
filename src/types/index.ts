@@ -1,4 +1,5 @@
 import { User as FirebaseUser } from "firebase/auth";
+import { LucideIcon } from "lucide-react";
 
 export interface UserProfile {
   uid: string;
@@ -7,8 +8,16 @@ export interface UserProfile {
   photoURL?: string;
   carbonScore: number;
   ecoPoints: number;
+  monthlyGoal?: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface CarbonInsight {
+  id: string;
+  type: 'tip' | 'warning' | 'achievement';
+  text: string;
+  action?: string;
 }
 
 export interface AuthState {
@@ -31,7 +40,7 @@ export interface CarbonLog {
 export interface CarbonCategory {
   id: string;
   name: string;
-  icon: any;
+  icon: LucideIcon;
   unit: string;
   multiplier: number;
   target: number;
@@ -41,4 +50,20 @@ export interface CarbonCategory {
 export interface CoachResponse {
   text: string;
   error?: string;
+}
+
+export interface Challenge {
+  title: string;
+  points: number;
+  progress: number;
+  total: number;
+  label: string;
+}
+
+export interface CategoryBarProps {
+  icon: LucideIcon;
+  color: string;
+  name: string;
+  value: number;
+  target: number;
 }

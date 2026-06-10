@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useMemo } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { memo, useCallback, Suspense } from "react";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { 
   LayoutDashboard, 
@@ -10,7 +10,8 @@ import {
   User, 
   Settings,
   LogOut,
-  Menu
+  Menu,
+  Loader2
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -29,13 +30,13 @@ const NavLink = memo(({ item, isActive, onClick, isMobile }: any) => {
         to={item.href}
         onClick={onClick}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors",
+          "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold transition-colors",
           isActive
-            ? "bg-green-50 text-green-700"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
         )}
       >
-        <item.icon className={cn("w-5 h-5", isActive ? "text-green-600" : "text-gray-400")} />
+        <item.icon aria-hidden="true" className={cn("w-5 h-5", isActive ? "text-white" : "text-gray-400")} />
         {item.name}
       </Link>
     );
@@ -45,13 +46,13 @@ const NavLink = memo(({ item, isActive, onClick, isMobile }: any) => {
     <Link
       to={item.href}
       className={cn(
-        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
         isActive
-          ? "bg-green-50 text-emerald-700 font-semibold"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 overflow-hidden relative group"
+          ? "bg-emerald-600 text-white shadow-xl shadow-emerald-200 translate-x-1"
+          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 group"
       )}
     >
-      <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-emerald-600" : "text-gray-400")} />
+      <item.icon aria-hidden="true" className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-gray-400")} />
       {item.name}
     </Link>
   );
@@ -59,7 +60,7 @@ const NavLink = memo(({ item, isActive, onClick, isMobile }: any) => {
 
 NavLink.displayName = "NavLink";
 
-export const AppLayout = ({ children }: { children: React.ReactNode }) => {
+export const AppLayout = ({ children }: { children?: React.ReactNode }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -78,7 +79,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
-      {/* Skip to Content Link */}
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-lg focus:shadow-lg outline-none ring-2 ring-emerald-500 ring-offset-2"
@@ -86,7 +86,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         Skip to main content
       </a>
 
-      {/* Mobile nav */}
       <header className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2">
           <div aria-hidden="true" className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center">
@@ -109,17 +108,16 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <nav id="mobile-navigation" className="md:hidden bg-white border-b border-gray-200 px-4 py-2 space-y-1" aria-label="Mobile Navigation">
            {NAVIGATION_ITEMS.map((item) => (
              <NavLink 
-               key={item.name}
-               item={item} 
-               isActive={location.pathname === item.href} 
-               onClick={closeMobileMenu}
-               isMobile
-             />
+                key={item.name}
+                item={item} 
+                isActive={location.pathname === item.href} 
+                onClick={closeMobileMenu}
+                isMobile
+              />
            ))}
         </nav>
       )}
 
-      {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 min-h-screen sticky top-0" aria-label="Sidebar Navigation">
         <div className="p-6 flex items-center gap-3">
           <div aria-hidden="true" className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
@@ -153,8 +151,8 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link 
               to="/app/profile" 
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                location.pathname === "/app/profile" ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors",
+                location.pathname === "/app/profile" ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
               <User aria-hidden="true" className="w-5 h-5 text-gray-400" />Profile
@@ -162,7 +160,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link 
               to="/app/settings" 
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors",
                 location.pathname === "/app/settings" ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
@@ -178,10 +176,11 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main id="main-content" className="flex-1 w-full min-w-0 outline-none" tabIndex={-1}>
         <div className="h-full">
-            {children}
+            <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" /></div>}>
+              {children || <Outlet />}
+            </Suspense>
         </div>
       </main>
     </div>
